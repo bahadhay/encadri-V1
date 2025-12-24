@@ -156,24 +156,44 @@ var app = builder.Build();
 // Apply migrations and seed database
 using (var scope = app.Services.CreateScope())
 {
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
     try
     {
-        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        logger.LogInformation("=== STARTING DATABASE MIGRATION ===");
+        Console.WriteLine("=== STARTING DATABASE MIGRATION ===");
+
+        // Check if database exists
+        var canConnect = await context.Database.CanConnectAsync();
+        logger.LogInformation($"Can connect to database: {canConnect}");
+        Console.WriteLine($"Can connect to database: {canConnect}");
 
         // Apply pending migrations
+        logger.LogInformation("Applying database migrations...");
         Console.WriteLine("Applying database migrations...");
+
         await context.Database.MigrateAsync();
+
+        logger.LogInformation("Migrations applied successfully!");
         Console.WriteLine("Migrations applied successfully!");
 
         // Seed the database with test data
+        logger.LogInformation("Seeding database...");
         Console.WriteLine("Seeding database...");
+
         await Encadri_Backend.Data.DbSeeder.SeedDatabase(context);
+
+        logger.LogInformation("Database seeding completed!");
         Console.WriteLine("Database seeding completed!");
+        Console.WriteLine("=== DATABASE SETUP COMPLETE ===");
     }
     catch (Exception ex)
     {
+        logger.LogError(ex, "ERROR during database setup");
         Console.WriteLine($"ERROR during database setup: {ex.Message}");
         Console.WriteLine($"Stack trace: {ex.StackTrace}");
+        Console.WriteLine($"Inner exception: {ex.InnerException?.Message}");
         // Don't crash the app, just log the error
         Console.WriteLine("Continuing without seeding...");
     }
