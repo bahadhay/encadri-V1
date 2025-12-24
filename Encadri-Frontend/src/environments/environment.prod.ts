@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://encadriv1-backend-production.up.railway.app/api',
-  hubUrl: 'https://encadriv1-backend-production.up.railway.app/hubs'
+  apiUrl: 'https://encadri-api.azurewebsites.net/api',
+  hubUrl: 'https://encadri-api.azurewebsites.net/hubs'
 };
