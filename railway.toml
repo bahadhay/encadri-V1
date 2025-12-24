@@ -1,8 +1,0 @@
-[build]
-builder = "DOCKERFILE"
-dockerfilePath = "Encadri-Backend/Encadri-Backend/Dockerfile"
-
-[deploy]
-startCommand = "dotnet Encadri-Backend.dll"
-healthcheckPath = "/swagger/index.html"
-healthcheckTimeout = 300
