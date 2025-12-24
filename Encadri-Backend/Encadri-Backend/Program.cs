@@ -187,12 +187,20 @@ using (var scope = app.Services.CreateScope())
         var tablesExist = false;
         try
         {
+            logger.LogInformation("Checking if Users table exists...");
+            Console.WriteLine("Checking if Users table exists...");
+
             await context.Users.AnyAsync();
             tablesExist = true;
+
+            logger.LogInformation("Users table EXISTS");
+            Console.WriteLine("Users table EXISTS");
         }
-        catch
+        catch (Exception ex)
         {
             tablesExist = false;
+            logger.LogWarning($"Users table does NOT exist. Error: {ex.Message}");
+            Console.WriteLine($"Users table does NOT exist. Error: {ex.Message}");
         }
 
         logger.LogInformation($"Database tables exist: {tablesExist}");
