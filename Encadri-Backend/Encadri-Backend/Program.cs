@@ -206,17 +206,17 @@ using (var scope = app.Services.CreateScope())
         logger.LogInformation($"Database tables exist: {tablesExist}");
         Console.WriteLine($"Database tables exist: {tablesExist}");
 
-        // Force recreate if tables don't exist regardless of migration history
+        // Force apply migrations if tables don't exist
         if (!tablesExist)
         {
-            logger.LogWarning("Database tables do not exist. Recreating database...");
-            Console.WriteLine("Database tables do not exist. Recreating database schema...");
+            logger.LogWarning("Database tables do not exist. Forcing migration...");
+            Console.WriteLine("Database tables do not exist. Forcing migration...");
 
-            await context.Database.EnsureDeletedAsync();
-            await context.Database.EnsureCreatedAsync();
+            // Force apply all migrations
+            await context.Database.MigrateAsync();
 
-            logger.LogInformation("Database recreated successfully!");
-            Console.WriteLine("Database recreated successfully!");
+            logger.LogInformation("Migrations applied successfully!");
+            Console.WriteLine("Migrations applied successfully!");
         }
         else if (pendingMigrations.Any())
         {
