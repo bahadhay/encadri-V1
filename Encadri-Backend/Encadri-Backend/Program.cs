@@ -183,11 +183,26 @@ using (var scope = app.Services.CreateScope())
             Console.WriteLine($"  - Pending: {migration}");
         }
 
-        // Force delete and recreate database if migrations table is corrupted
-        if (!appliedMigrations.Any() && !pendingMigrations.Any())
+        // Check if Users table exists to determine if database is empty
+        var tablesExist = false;
+        try
         {
-            logger.LogWarning("Migration history is empty but migrations exist. Recreating database...");
-            Console.WriteLine("Migration history is empty. Recreating database schema...");
+            await context.Users.AnyAsync();
+            tablesExist = true;
+        }
+        catch
+        {
+            tablesExist = false;
+        }
+
+        logger.LogInformation($"Database tables exist: {tablesExist}");
+        Console.WriteLine($"Database tables exist: {tablesExist}");
+
+        // Force recreate if tables don't exist regardless of migration history
+        if (!tablesExist)
+        {
+            logger.LogWarning("Database tables do not exist. Recreating database...");
+            Console.WriteLine("Database tables do not exist. Recreating database schema...");
 
             await context.Database.EnsureDeletedAsync();
             await context.Database.EnsureCreatedAsync();
@@ -195,7 +210,7 @@ using (var scope = app.Services.CreateScope())
             logger.LogInformation("Database recreated successfully!");
             Console.WriteLine("Database recreated successfully!");
         }
-        else
+        else if (pendingMigrations.Any())
         {
             // Apply pending migrations
             logger.LogInformation("Applying database migrations...");
@@ -205,6 +220,11 @@ using (var scope = app.Services.CreateScope())
 
             logger.LogInformation("Migrations applied successfully!");
             Console.WriteLine("Migrations applied successfully!");
+        }
+        else
+        {
+            logger.LogInformation("Database is up to date.");
+            Console.WriteLine("Database is up to date.");
         }
 
         // Seed the database with test data
