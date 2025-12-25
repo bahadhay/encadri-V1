@@ -96,9 +96,9 @@
           </div>
 
           <div class="projects-list">
-            <div class="project-card" *ngFor="let project of s.projectProgress" [routerLink]="['/projects', project.id]">
+            <div class="project-card" *ngFor="let project of s.projectProgress" [routerLink]="['/projects', project?.id]">
               <div class="project-header">
-                <h4>{{ project.title }}</h4>
+                <h4>{{ project?.title }}</h4>
                 <button class="project-arrow">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -108,26 +108,26 @@
 
               <div class="project-badges">
                 <span class="badge badge-cyan">Internship</span>
-                <span class="badge" [ngClass]="'badge-' + project.status">{{ project.status }}</span>
+                <span class="badge" [ngClass]="'badge-' + project?.status">{{ project?.status }}</span>
               </div>
 
               <div class="progress-section">
                 <div class="progress-header">
                   <span class="progress-icon">📈</span>
                   <span class="progress-label">Progress</span>
-                  <span class="progress-percent">{{ project.progressPercentage ?? 0 }}%</span>
+                  <span class="progress-percent">{{ project?.progressPercentage ?? 0 }}%</span>
                 </div>
                 <div class="progress-bar">
                   <div class="progress-fill"
-                       [style.width.%]="project.progressPercentage ?? 0"
-                       [style.background-color]="getProgressColor(project.progressPercentage ?? 0)">
+                       [style.width.%]="project?.progressPercentage ?? 0"
+                       [style.background-color]="getProgressColor(project?.progressPercentage ?? 0)">
                   </div>
                 </div>
-                <p class="progress-text">{{ getProgressText(project.progressPercentage ?? 0) }}</p>
+                <p class="progress-text">{{ getProgressText(project?.progressPercentage ?? 0) }}</p>
               </div>
 
-              <div class="project-meta" *ngIf="project.studentEmail">
-                <p class="meta-label">Student: <span class="meta-value">{{ project.studentEmail }}</span></p>
+              <div class="project-meta" *ngIf="project?.studentEmail">
+                <p class="meta-label">Student: <span class="meta-value">{{ project?.studentEmail }}</span></p>
               </div>
             </div>
           </div>
@@ -199,7 +199,7 @@
           </div>
 
           <div class="activity-list" *ngIf="s.recentSubmissions && s.recentSubmissions.length > 0">
-            <div class="activity-item" *ngFor="let sub of s.recentSubmissions" [routerLink]="['/submissions', sub.id]">
+            <div class="activity-item" *ngFor="let sub of s.recentSubmissions" [routerLink]="['/submissions', sub?.id]">
               <div class="activity-icon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -207,18 +207,18 @@
                 </svg>
               </div>
               <div class="activity-details">
-                <h4>{{ sub.title }}</h4>
+                <h4>{{ sub?.title }}</h4>
                 <p>encadri plus</p>
               </div>
               <div class="activity-meta">
-                <span class="activity-badge" [ngClass]="'badge-' + sub.status">{{ sub.status }}</span>
-                <span class="activity-date">{{ sub.createdDate | date:'MMM d' }}</span>
+                <span class="activity-badge" [ngClass]="'badge-' + sub?.status">{{ sub?.status }}</span>
+                <span class="activity-date">{{ sub?.createdDate | date:'MMM d' }}</span>
               </div>
             </div>
           </div>
 
           <div class="activity-list" *ngIf="isSupervisor && s.recentPendingSubmissions && s.recentPendingSubmissions.length > 0">
-            <div class="activity-item" *ngFor="let sub of s.recentPendingSubmissions" [routerLink]="['/submissions', sub.id]">
+            <div class="activity-item" *ngFor="let sub of s.recentPendingSubmissions" [routerLink]="['/submissions', sub?.id]">
               <div class="activity-icon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -226,12 +226,12 @@
                 </svg>
               </div>
               <div class="activity-details">
-                <h4>{{ sub.title }}</h4>
-                <p>{{ sub.submittedBy }}</p>
+                <h4>{{ sub?.title }}</h4>
+                <p>{{ sub?.submittedBy }}</p>
               </div>
               <div class="activity-meta">
-                <span class="activity-badge badge-pending">{{ sub.status }}</span>
-                <span class="activity-date">{{ sub.createdDate | date:'MMM d' }}</span>
+                <span class="activity-badge badge-pending">{{ sub?.status }}</span>
+                <span class="activity-date">{{ sub?.createdDate | date:'MMM d' }}</span>
               </div>
             </div>
           </div>
