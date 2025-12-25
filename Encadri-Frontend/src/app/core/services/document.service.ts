@@ -70,7 +70,7 @@ export class DocumentService {
     }
 
     // Create HTTP request with progress tracking
-    const req = new HttpRequest('POST', `${this.apiService['apiUrl']}${this.BASE_PATH}/upload`, formData, {
+    const req = new HttpRequest('POST', `${this.apiService.apiUrl}${this.BASE_PATH}/upload`, formData, {
       reportProgress: true
     });
 
