@@ -57,6 +57,6 @@ export class SubmissionService {
 
   downloadFile(blobName: string): string {
     // Returns the download endpoint URL
-    return `${this.apiService['baseUrl']}${this.BASE_PATH}/download/${blobName}`;
+    return `${this.apiService.apiUrl}${this.BASE_PATH}/download/${blobName}`;
   }
 }
