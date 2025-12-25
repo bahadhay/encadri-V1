@@ -1,0 +1,105 @@
+<div class="video-call-container">
+  <!-- Header -->
+  <div class="call-header">
+    <h2>{{ meetingTitle || 'Video Meeting' }}</h2>
+    <span class="participant-count">{{ participantCount() }} participants</span>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error()" class="error-banner">
+    <span>⚠️ {{ error() }}</span>
+  </div>
+
+  <!-- Video Grid -->
+  <div *ngIf="isCallActive()" class="video-grid">
+    <!-- Local video (your camera) -->
+    <div class="video-tile local-video">
+      <video #localVideo autoplay muted></video>
+      <div class="video-label">You</div>
+    </div>
+
+    <!-- Remote videos (other participants) -->
+    <div class="video-tile remote-video">
+      <div class="video-placeholder">
+        <div class="avatar">👤</div>
+        <p>Waiting for participants...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Waiting Room -->
+  <div *ngIf="!isCallActive() && !isConnecting()" class="waiting-room">
+    <app-ui-card>
+      <div class="waiting-content">
+        <div class="camera-preview">
+          <video #previewVideo autoplay muted></video>
+        </div>
+        <h3>Ready to join?</h3>
+        <p>Check your camera and microphone before joining</p>
+        <div class="device-checks">
+          <div class="check-item">
+            <span class="icon">📹</span>
+            <span>Camera: Ready</span>
+          </div>
+          <div class="check-item">
+            <span class="icon">🎤</span>
+            <span>Microphone: Ready</span>
+          </div>
+        </div>
+        <app-ui-button
+          variant="primary"
+          size="lg"
+          (click)="startCall()">
+          Join Meeting
+        </app-ui-button>
+      </div>
+    </app-ui-card>
+  </div>
+
+  <!-- Connecting State -->
+  <div *ngIf="isConnecting()" class="connecting-state">
+    <div class="spinner"></div>
+    <p>Connecting to meeting...</p>
+  </div>
+
+  <!-- Call Controls -->
+  <div *ngIf="isCallActive()" class="call-controls">
+    <div class="control-buttons">
+      <!-- Mute/Unmute -->
+      <button
+        class="control-btn"
+        [class.active]="!isMuted()"
+        (click)="toggleMute()"
+        title="Toggle Microphone">
+        <span *ngIf="!isMuted()">🎤</span>
+        <span *ngIf="isMuted()" class="muted">🎤</span>
+      </button>
+
+      <!-- Video On/Off -->
+      <button
+        class="control-btn"
+        [class.active]="isVideoOn()"
+        (click)="toggleVideo()"
+        title="Toggle Camera">
+        <span *ngIf="isVideoOn()">📹</span>
+        <span *ngIf="!isVideoOn()" class="off">📹</span>
+      </button>
+
+      <!-- Share Screen -->
+      <button
+        class="control-btn"
+        (click)="shareScreen()"
+        title="Share Screen">
+        <span>🖥️</span>
+      </button>
+
+      <!-- End Call -->
+      <button
+        class="control-btn end-call"
+        (click)="endCall()"
+        title="Leave Meeting">
+        <span>📞</span>
+      </button>
+    </div>
+  </div>
+</div>

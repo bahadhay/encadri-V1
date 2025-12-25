@@ -70,6 +70,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/meetings/meeting-list/meeting-list.component').then(m => m.MeetingListComponent)
       },
       {
+        path: 'video-call/:meetingId',
+        loadComponent: () => import('./features/video-call/video-call.component').then(m => m.VideoCallComponent)
+      },
+      {
         path: 'chat',
         loadComponent: () => import('./features/chat/chat-container.component').then(m => m.ChatContainerComponent)
       },

@@ -55,11 +55,14 @@
           <p class="agenda" *ngIf="meeting.agenda">{{ meeting.agenda }}</p>
         </div>
 
-        <!-- <div class="card-actions">
-           <app-ui-button variant="outline" size="sm" [routerLink]="['/meetings', meeting.id]">
-            Details
+        <div class="card-actions">
+          <app-ui-button
+            variant="primary"
+            size="sm"
+            [routerLink]="['/video-call', meeting.id]">
+            🎥 Join Video Call
           </app-ui-button>
-        </div> -->
+        </div>
       </div>
     </app-ui-card>
   </div>
