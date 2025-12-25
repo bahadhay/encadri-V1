@@ -1,87 +1,244 @@
 <div class="dashboard-container">
+  <!-- Header -->
   <div class="header">
-    <h2>Hello, {{ user?.fullName }}! 👋</h2>
-    <p>Here's what's happening with your projects today.</p>
+    <h2>Welcome back, {{ user?.fullName }}! 👋</h2>
+    <p class="subtitle">Here's your performance overview</p>
   </div>
 
-  <div class="stats-grid">
-    <app-ui-card class="stat-card-wrapper" [hover]="true" [compact]="true">
-      <div class="stat-card">
-        <span class="stat-icon p-blue">📁</span>
-        <div class="stat-content">
-          <h3>Active Projects</h3>
-          <p class="stat-value">{{ activeProjectsCount() }}</p>
-          <span class="stat-label">In Progress</span>
-        </div>
-      </div>
-    </app-ui-card>
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading dashboard...</p>
+  </div>
 
-    <app-ui-card class="stat-card-wrapper" [hover]="true" [compact]="true">
-      <div class="stat-card">
-        <span class="stat-icon p-yellow">⏳</span>
+  <!-- Error State -->
+  <div *ngIf="error()" class="error-state">
+    <p>{{ error() }}</p>
+    <app-ui-button variant="primary" (click)="loadDashboardStats()">Retry</app-ui-button>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!loading() && !error() && stats() as s" class="dashboard-content">
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+      <!-- Projects Card -->
+      <app-ui-card class="stat-card" [hover]="true">
         <div class="stat-content">
+          <div class="stat-icon-wrapper blue">
+            <span class="stat-icon">📁</span>
+          </div>
+          <div class="stat-info">
+            <p class="stat-label">Total Projects</p>
+            <h3 class="stat-value">{{ s.totalProjects }}</h3>
+            <p class="stat-detail">{{ s.activeProjects }} active</p>
+          </div>
+        </div>
+      </app-ui-card>
+
+      <!-- Submissions Card -->
+      <app-ui-card class="stat-card" [hover]="true">
+        <div class="stat-content">
+          <div class="stat-icon-wrapper green">
+            <span class="stat-icon">📝</span>
+          </div>
+          <div class="stat-info">
+            <p class="stat-label">Submissions</p>
+            <h3 class="stat-value">{{ s.totalSubmissions }}</h3>
+            <p class="stat-detail" *ngIf="isStudent">{{ s.approvedSubmissions }} approved</p>
+            <p class="stat-detail" *ngIf="isSupervisor">{{ s.pendingSubmissions }} pending</p>
+          </div>
+        </div>
+      </app-ui-card>
+
+      <!-- Average Grade Card (Student Only) -->
+      <app-ui-card class="stat-card" [hover]="true" *ngIf="isStudent && s.averageGrade">
+        <div class="stat-content">
+          <div class="stat-icon-wrapper purple">
+            <span class="stat-icon">⭐</span>
+          </div>
+          <div class="stat-info">
+            <p class="stat-label">Average Grade</p>
+            <h3 class="stat-value">{{ s.averageGrade }}/20</h3>
+            <p class="stat-detail">Overall performance</p>
+          </div>
+        </div>
+      </app-ui-card>
+
+      <!-- Students Card (Supervisor Only) -->
+      <app-ui-card class="stat-card" [hover]="true" *ngIf="isSupervisor">
+        <div class="stat-content">
+          <div class="stat-icon-wrapper purple">
+            <span class="stat-icon">👥</span>
+          </div>
+          <div class="stat-info">
+            <p class="stat-label">Students</p>
+            <h3 class="stat-value">{{ s.totalStudents }}</h3>
+            <p class="stat-detail">Supervised</p>
+          </div>
+        </div>
+      </app-ui-card>
+
+      <!-- Meetings Card -->
+      <app-ui-card class="stat-card" [hover]="true">
+        <div class="stat-content">
+          <div class="stat-icon-wrapper orange">
+            <span class="stat-icon">📅</span>
+          </div>
+          <div class="stat-info">
+            <p class="stat-label">Meetings</p>
+            <h3 class="stat-value">{{ s.upcomingMeetings }}</h3>
+            <p class="stat-detail">Upcoming</p>
+          </div>
+        </div>
+      </app-ui-card>
+
+      <!-- Milestones Card -->
+      <app-ui-card class="stat-card" [hover]="true">
+        <div class="stat-content">
+          <div class="stat-icon-wrapper teal">
+            <span class="stat-icon">🎯</span>
+          </div>
+          <div class="stat-info">
+            <p class="stat-label">Milestones</p>
+            <h3 class="stat-value">{{ s.completedMilestones }}/{{ s.totalMilestones }}</h3>
+            <p class="stat-detail">Completed</p>
+          </div>
+        </div>
+      </app-ui-card>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-grid">
+
+      <!-- Submission Status Chart -->
+      <app-ui-card class="chart-card" *ngIf="s.totalSubmissions > 0">
+        <div class="chart-header">
+          <h3>Submission Status Overview</h3>
+          <p class="chart-subtitle">Distribution of all submissions</p>
+        </div>
+        <div class="chart-container">
+          <canvas baseChart
+            [data]="submissionChartData"
+            [type]="pieChartType"
+            [options]="pieChartOptions">
+          </canvas>
+        </div>
+      </app-ui-card>
+
+      <!-- Grade Trend Chart (Student Only) -->
+      <app-ui-card class="chart-card" *ngIf="isStudent && s.gradeTrend && s.gradeTrend.length > 0">
+        <div class="chart-header">
+          <h3>Grade Trend</h3>
+          <p class="chart-subtitle">Your recent grades over time</p>
+        </div>
+        <div class="chart-container">
+          <canvas baseChart
+            [data]="gradeTrendChartData"
+            [type]="lineChartType"
+            [options]="lineChartOptions">
+          </canvas>
+        </div>
+      </app-ui-card>
+
+      <!-- Project Progress (Supervisor Only) -->
+      <app-ui-card class="chart-card wide" *ngIf="isSupervisor && s.projectProgress && s.projectProgress.length > 0">
+        <div class="chart-header">
+          <h3>Project Progress Overview</h3>
+          <p class="chart-subtitle">All supervised projects</p>
+        </div>
+        <div class="progress-list">
+          <div class="progress-item" *ngFor="let project of s.projectProgress">
+            <div class="progress-info">
+              <h4>{{ project.title }}</h4>
+              <span class="progress-badge" [class]="project.status">{{ project.status }}</span>
+            </div>
+            <div class="progress-bar-wrapper">
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill"
+                     [style.width.%]="project.progressPercentage"
+                     [style.background-color]="getProgressColor(project.progressPercentage)">
+                </div>
+              </div>
+              <span class="progress-percentage">{{ project.progressPercentage }}%</span>
+            </div>
+          </div>
+        </div>
+      </app-ui-card>
+    </div>
+
+    <!-- Recent Activity Section -->
+    <div class="activity-section">
+
+      <!-- Recent Submissions (Student) -->
+      <app-ui-card class="activity-card" *ngIf="isStudent && s.recentSubmissions && s.recentSubmissions.length > 0">
+        <div class="section-header">
+          <h3>Recent Submissions</h3>
+          <app-ui-button variant="outline" size="sm" routerLink="/submissions">View All</app-ui-button>
+        </div>
+        <div class="activity-list">
+          <div class="activity-item" *ngFor="let submission of s.recentSubmissions">
+            <div class="activity-icon" [class]="submission.status">
+              <span>📄</span>
+            </div>
+            <div class="activity-content">
+              <h4>{{ submission.title }}</h4>
+              <div class="activity-meta">
+                <span class="status-badge" [class]="submission.status">{{ submission.status }}</span>
+                <span class="activity-date">{{ submission.createdDate | date:'short' }}</span>
+                <span class="activity-grade" *ngIf="submission.grade">Grade: {{ submission.grade }}/20</span>
+              </div>
+            </div>
+            <app-ui-button variant="outline" size="sm" [routerLink]="['/submissions', submission.id]">View</app-ui-button>
+          </div>
+        </div>
+      </app-ui-card>
+
+      <!-- Pending Submissions (Supervisor) -->
+      <app-ui-card class="activity-card" *ngIf="isSupervisor && s.recentPendingSubmissions && s.recentPendingSubmissions.length > 0">
+        <div class="section-header">
           <h3>Pending Reviews</h3>
-          <p class="stat-value">{{ pendingReviewsCount() }}</p>
-          <span class="stat-label">Awaiting Action</span>
+          <app-ui-button variant="outline" size="sm" routerLink="/submissions">View All</app-ui-button>
         </div>
-      </div>
-    </app-ui-card>
-
-    <app-ui-card class="stat-card-wrapper" [hover]="true" [compact]="true">
-      <div class="stat-card">
-        <span class="stat-icon p-green">📅</span>
-        <div class="stat-content">
-          <h3>Upcoming Meetings</h3>
-          <p class="stat-value">{{ upcomingMeetingsCount() }}</p>
-          <span class="stat-label">Scheduled</span>
+        <div class="activity-list">
+          <div class="activity-item" *ngFor="let submission of s.recentPendingSubmissions">
+            <div class="activity-icon pending">
+              <span>📄</span>
+            </div>
+            <div class="activity-content">
+              <h4>{{ submission.title }}</h4>
+              <div class="activity-meta">
+                <span class="status-badge" [class]="submission.status">{{ submission.status }}</span>
+                <span class="activity-student">By: {{ submission.submittedBy }}</span>
+                <span class="activity-date">{{ submission.createdDate | date:'short' }}</span>
+              </div>
+            </div>
+            <app-ui-button variant="primary" size="sm" [routerLink]="['/submissions', submission.id]">Review</app-ui-button>
+          </div>
         </div>
-      </div>
-    </app-ui-card>
-  </div>
+      </app-ui-card>
 
-  <div class="content-grid">
-    <section>
-      <div class="section-header">
-        <h3>My Projects</h3>
-        <app-ui-button variant="primary" size="sm" routerLink="/projects/new">New Project</app-ui-button>
-      </div>
-      
-      <div *ngIf="myProjects().length === 0" class="empty-state">
-        <p>You haven't created any projects yet.</p>
-      </div>
-
-      <div class="projects-list">
-        <app-ui-card *ngFor="let project of myProjects()" class="project-card">
-          <div class="card-content">
-            <h4>{{ project.title }}</h4>
-            <span class="badge" [class]="project.status">{{ project.status }}</span>
-            <p>{{ project.description | slice:0:100 }}...</p>
-            <div class="card-actions">
-              <a [routerLink]="['/projects', project.id]">Manage</a>
-            </div>
-          </div>
-        </app-ui-card>
-      </div>
-    </section>
-
-    <section>
-      <h3>Collaborations</h3>
-      <div *ngIf="collaborations().length === 0" class="empty-state">
-        <p>No collaborations yet.</p>
-      </div>
-
-      <div class="projects-list">
-        <app-ui-card *ngFor="let project of collaborations()" class="project-card">
-          <div class="card-content">
-            <h4>{{ project.title }}</h4>
-            <span class="badge" [class]="project.status">{{ project.status }}</span>
-            <p>Owner: {{ project.ownerEmail }}</p>
-            <div class="card-actions">
-              <a [routerLink]="['/projects', project.id]">View</a>
-            </div>
-          </div>
-        </app-ui-card>
-      </div>
-    </section>
+      <!-- Quick Actions -->
+      <app-ui-card class="quick-actions-card">
+        <h3>Quick Actions</h3>
+        <div class="quick-actions-grid">
+          <app-ui-button variant="primary" routerLink="/projects/new" *ngIf="isSupervisor">
+            New Project
+          </app-ui-button>
+          <app-ui-button variant="primary" routerLink="/projects">
+            View Projects
+          </app-ui-button>
+          <app-ui-button variant="secondary" routerLink="/submissions">
+            Submissions
+          </app-ui-button>
+          <app-ui-button variant="secondary" routerLink="/meetings">
+            Meetings
+          </app-ui-button>
+          <app-ui-button variant="outline" routerLink="/chat">
+            Messages
+          </app-ui-button>
+        </div>
+      </app-ui-card>
+    </div>
   </div>
 </div>
