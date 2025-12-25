@@ -91,7 +91,7 @@ namespace Encadri_Backend.Controllers
 
                 // Meeting stats
                 totalMeetings = meetings.Count,
-                upcomingMeetings = meetings.Count(m => m.Date > DateTime.UtcNow && m.Status != "cancelled"),
+                upcomingMeetings = meetings.Count(m => m.ScheduledAt > DateTime.UtcNow && m.Status != "cancelled"),
                 completedMeetings = meetings.Count(m => m.Status == "completed"),
 
                 // Recent activity
@@ -181,7 +181,7 @@ namespace Encadri_Backend.Controllers
 
                 // Meeting stats
                 totalMeetings = meetings.Count,
-                upcomingMeetings = meetings.Count(m => m.Date > DateTime.UtcNow && m.Status != "cancelled"),
+                upcomingMeetings = meetings.Count(m => m.ScheduledAt > DateTime.UtcNow && m.Status != "cancelled"),
 
                 // Recent submissions needing review
                 recentPendingSubmissions = submissions
