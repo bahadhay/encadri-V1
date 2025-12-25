@@ -4,7 +4,7 @@ using Encadri_Backend.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure port for Railway deployment
+// Configure port for Railway deployment (restored old dashboard)
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
