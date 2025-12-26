@@ -63,6 +63,27 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
           </div>
         }
 
+        @if (loadingSlots()) {
+          <p class="loading-text">Loading supervisor availability...</p>
+        }
+
+        @if (availableSlots().length > 0 && !loadingSlots()) {
+          <div class="availability-info">
+            <h3>Supervisor's Office Hours:</h3>
+            <div class="slots-list">
+              @for (daySlot of availableSlots(); track daySlot.day) {
+                <div class="day-slot">
+                  <strong>{{ daySlot.day }}:</strong>
+                  @for (slot of daySlot.slots; track slot.id) {
+                    <span class="time-badge">{{ slot.startTime }} - {{ slot.endTime }}</span>
+                  }
+                </div>
+              }
+            </div>
+            <p class="hint-text">💡 Please select a date and time within these office hours</p>
+          </div>
+        }
+
         <div class="form-group">
           <label>Meeting Title</label>
           <input type="text" [(ngModel)]="request.title" placeholder="e.g., Progress Update">
@@ -241,6 +262,56 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
       font-size: 0.875rem;
     }
 
+    .availability-info {
+      background-color: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .availability-info h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #166534;
+      margin-bottom: 0.75rem;
+    }
+
+    .slots-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .day-slot {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .day-slot strong {
+      color: #166534;
+      min-width: 100px;
+    }
+
+    .time-badge {
+      background-color: #dcfce7;
+      border: 1px solid #86efac;
+      color: #166534;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.813rem;
+      font-weight: 500;
+    }
+
+    .hint-text {
+      color: #15803d;
+      font-size: 0.875rem;
+      margin: 0;
+    }
+
     .actions {
       display: flex;
       justify-content: flex-end;
@@ -296,9 +367,12 @@ export class RequestMeetingComponent implements OnInit {
   projects = signal<Project[]>([]);
   selectedProjectId = '';
   selectedProject = signal<Project | null>(null);
+  availableSlots = signal<any[]>([]);
+  loadingSlots = signal(false);
 
   preferredDate = '';
   preferredTime = '';
+  selectedDayOfWeek = '';
 
   request: Partial<MeetingRequest> = {
     studentEmail: this.currentUser()?.email || '',
@@ -337,11 +411,30 @@ export class RequestMeetingComponent implements OnInit {
       this.selectedProject.set(project);
       this.request.projectId = project.id;
       this.request.supervisorEmail = project.supervisorEmail;
+
+      // Load supervisor's availability
+      this.loadSupervisorAvailability(project.supervisorEmail);
     } else {
       this.selectedProject.set(null);
       this.request.projectId = '';
       this.request.supervisorEmail = '';
+      this.availableSlots.set([]);
     }
+  }
+
+  loadSupervisorAvailability(supervisorEmail: string) {
+    this.loadingSlots.set(true);
+    this.meetingService.getWeeklySchedule(supervisorEmail).subscribe({
+      next: (schedule) => {
+        this.availableSlots.set(schedule);
+        this.loadingSlots.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load availability:', err);
+        this.availableSlots.set([]);
+        this.loadingSlots.set(false);
+      }
+    });
   }
 
   isValid(): boolean {
