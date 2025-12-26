@@ -15,23 +15,38 @@ namespace Encadri_Backend.Services
 
     public class AzureCommunicationService : IAzureCommunicationService
     {
-        private readonly CommunicationIdentityClient _client;
+        private readonly CommunicationIdentityClient? _client;
+        private readonly bool _isConfigured;
 
         public AzureCommunicationService(IConfiguration configuration)
         {
             var connectionString = configuration["AzureCommunication:ConnectionString"]
                 ?? Environment.GetEnvironmentVariable("AZURE_COMMUNICATION_CONNECTION_STRING");
 
-            if (string.IsNullOrEmpty(connectionString))
+            // Check if connection string is valid (not a placeholder)
+            if (string.IsNullOrEmpty(connectionString) ||
+                connectionString.Contains("YOUR_RESOURCE_NAME") ||
+                connectionString.Contains("YOUR_ACCESS_KEY"))
             {
-                throw new InvalidOperationException(
-                    "Azure Communication Services connection string not found. " +
-                    "Set AzureCommunication:ConnectionString in appsettings.json or " +
-                    "AZURE_COMMUNICATION_CONNECTION_STRING environment variable."
-                );
+                Console.WriteLine("Warning: Azure Communication Services is not configured. Video calling will not be available.");
+                _isConfigured = false;
+                _client = null;
             }
-
-            _client = new CommunicationIdentityClient(connectionString);
+            else
+            {
+                try
+                {
+                    _client = new CommunicationIdentityClient(connectionString);
+                    _isConfigured = true;
+                    Console.WriteLine("Azure Communication Services initialized successfully.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Warning: Failed to initialize Azure Communication Services: {ex.Message}");
+                    _isConfigured = false;
+                    _client = null;
+                }
+            }
         }
 
         /// <summary>
@@ -39,6 +54,14 @@ namespace Encadri_Backend.Services
         /// </summary>
         public async Task<string> CreateUserAndGetToken()
         {
+            if (!_isConfigured || _client == null)
+            {
+                throw new InvalidOperationException(
+                    "Azure Communication Services is not configured. " +
+                    "Please set up ACS connection string to enable video calling."
+                );
+            }
+
             try
             {
                 // Create a new user
@@ -65,6 +88,14 @@ namespace Encadri_Backend.Services
         /// </summary>
         public async Task<string> GetTokenForUser(string userId)
         {
+            if (!_isConfigured || _client == null)
+            {
+                throw new InvalidOperationException(
+                    "Azure Communication Services is not configured. " +
+                    "Please set up ACS connection string to enable video calling."
+                );
+            }
+
             try
             {
                 var user = new CommunicationUserIdentifier(userId);
