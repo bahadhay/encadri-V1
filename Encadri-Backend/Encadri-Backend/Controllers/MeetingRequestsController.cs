@@ -124,7 +124,8 @@ namespace Encadri_Backend.Controllers
                 RequestedBy = request.StudentEmail,
                 StudentEmail = request.StudentEmail,
                 SupervisorEmail = request.SupervisorEmail,
-                MeetingType = "virtual",
+                MeetingType = request.MeetingType ?? "virtual", // Use type from request, default to virtual
+                Location = request.Location, // Copy location from request
                 CreatedDate = DateTime.UtcNow,
                 UpdatedDate = DateTime.UtcNow
             };

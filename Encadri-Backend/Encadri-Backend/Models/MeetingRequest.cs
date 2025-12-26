@@ -14,6 +14,8 @@ namespace Encadri_Backend.Models
         public string? Agenda { get; set; }
         public DateTime PreferredDate { get; set; }
         public int? DurationMinutes { get; set; }
+        public string? MeetingType { get; set; } // "virtual" or "in-person"
+        public string? Location { get; set; } // Physical location for in-person meetings
         public string Status { get; set; } // "pending", "approved", "rejected", "cancelled"
         public string? RejectionReason { get; set; }
         public string? MeetingId { get; set; } // Reference to created Meeting if approved

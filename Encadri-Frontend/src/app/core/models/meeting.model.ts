@@ -30,6 +30,8 @@ export interface MeetingRequest {
   agenda?: string;
   preferredDate: string;
   durationMinutes?: number;
+  meetingType?: 'virtual' | 'in-person';
+  location?: string;
   status?: 'pending' | 'approved' | 'rejected' | 'cancelled';
   rejectionReason?: string;
   meetingId?: string;

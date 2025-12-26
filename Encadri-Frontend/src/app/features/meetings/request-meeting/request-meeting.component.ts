@@ -116,6 +116,21 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
         </div>
 
         <div class="form-group">
+          <label>Meeting Type *</label>
+          <select [(ngModel)]="request.meetingType">
+            <option value="virtual">Virtual / Online</option>
+            <option value="in-person">In-Person</option>
+          </select>
+        </div>
+
+        @if (request.meetingType === 'in-person') {
+          <div class="form-group">
+            <label>Location *</label>
+            <input type="text" [(ngModel)]="request.location" placeholder="e.g., Office 301, Building A">
+          </div>
+        }
+
+        <div class="form-group">
           <label>Agenda *</label>
           <textarea [(ngModel)]="request.agenda" rows="4" placeholder="What would you like to discuss?"></textarea>
         </div>
@@ -421,6 +436,8 @@ export class RequestMeetingComponent implements OnInit {
     title: '',
     agenda: '',
     durationMinutes: 30,
+    meetingType: 'virtual', // Default to virtual
+    location: '',
     status: 'pending'
   };
 
@@ -517,13 +534,20 @@ export class RequestMeetingComponent implements OnInit {
   }
 
   isValid(): boolean {
-    return !!(
+    const baseValid = !!(
       this.request.supervisorEmail &&
       this.request.projectId &&
       this.request.agenda &&
       this.preferredDate &&
       this.preferredTime
     );
+
+    // If in-person meeting, location is required
+    if (this.request.meetingType === 'in-person') {
+      return baseValid && !!this.request.location;
+    }
+
+    return baseValid;
   }
 
   submitRequest() {
