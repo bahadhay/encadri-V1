@@ -47,8 +47,16 @@ export class MeetingsDashboardComponent implements OnInit {
       }
     });
 
-    // Check for tab query parameter
+    // Check for query parameters
     this.route.queryParams.subscribe(params => {
+      // Check for requestId (from meeting request notifications)
+      if (params['requestId']) {
+        // Switch to requests tab for supervisors
+        this.switchTab('requests');
+        return;
+      }
+
+      // Check for tab query parameter
       if (params['tab'] && !this.highlightedMeetingId()) {
         this.switchTab(params['tab']);
       }
