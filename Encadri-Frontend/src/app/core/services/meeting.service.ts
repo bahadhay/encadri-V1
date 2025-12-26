@@ -65,8 +65,8 @@ export class MeetingService {
   }
 
   approveMeetingRequest(id: string, scheduledDate?: string): Observable<Meeting> {
-    // Send as an object with scheduledDate property (or null to use preferred date)
-    const body = scheduledDate ? { scheduledDate } : null;
+    // Send as an object with scheduledDate property (or empty object to use preferred date)
+    const body = scheduledDate ? { scheduledDate } : {};
     return this.apiService.post<Meeting>(`${this.REQUESTS_PATH}/${id}/approve`, body);
   }
 
