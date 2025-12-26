@@ -178,6 +178,73 @@ namespace Encadri_Backend.Services
             }
         }
 
+        public async Task NotifyMeetingRequestReceived(string supervisorEmail, string studentName, string meetingTitle, string requestId)
+        {
+            await SendNotificationAsync(
+                supervisorEmail,
+                "New Meeting Request",
+                $"{studentName} requested a meeting: '{meetingTitle}'.",
+                "meeting",
+                "High",
+                $"/meetings?requestId={requestId}"
+            );
+        }
+
+        public async Task NotifyMeetingRequestApproved(string studentEmail, string meetingTitle, DateTime meetingDate, string meetingId)
+        {
+            await SendNotificationAsync(
+                studentEmail,
+                "Meeting Request Approved",
+                $"Your meeting request '{meetingTitle}' has been approved for {meetingDate:MMM dd, yyyy HH:mm}.",
+                "success",
+                "High",
+                $"/meetings/{meetingId}"
+            );
+        }
+
+        public async Task NotifyMeetingRequestRejected(string studentEmail, string meetingTitle, string reason)
+        {
+            await SendNotificationAsync(
+                studentEmail,
+                "Meeting Request Rejected",
+                $"Your meeting request '{meetingTitle}' was rejected. Reason: {reason}",
+                "warning",
+                "High",
+                "/meetings"
+            );
+        }
+
+        public async Task NotifyUpcomingMeeting(string userEmail, string meetingTitle, DateTime meetingDate, int minutesBefore, string meetingId)
+        {
+            var timeText = minutesBefore >= 60
+                ? $"{minutesBefore / 60} hour(s)"
+                : $"{minutesBefore} minute(s)";
+
+            await SendNotificationAsync(
+                userEmail,
+                "Upcoming Meeting",
+                $"Reminder: '{meetingTitle}' starts in {timeText}.",
+                "meeting",
+                "Urgent",
+                $"/meetings/{meetingId}"
+            );
+        }
+
+        public async Task NotifyBulkMeetingInvitation(List<string> studentEmails, string meetingTitle, DateTime meetingDate, string meetingId)
+        {
+            foreach (var email in studentEmails)
+            {
+                await SendNotificationAsync(
+                    email,
+                    "Meeting Invitation",
+                    $"You're invited to '{meetingTitle}' on {meetingDate:MMM dd, yyyy HH:mm}.",
+                    "meeting",
+                    "High",
+                    $"/meetings/{meetingId}"
+                );
+            }
+        }
+
         // Evaluation Notifications
         public async Task NotifyEvaluationReceived(string studentEmail, string evaluationTitle, double score, string evaluationId)
         {

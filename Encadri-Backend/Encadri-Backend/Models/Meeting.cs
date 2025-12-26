@@ -15,7 +15,15 @@ namespace Encadri_Backend.Models
         public string Status { get; set; } // "pending", "confirmed", "completed", "cancelled"
         public string? Agenda { get; set; }
         public string? Notes { get; set; }
+        public string? MeetingNotes { get; set; } // Notes taken during the meeting
         public string? RequestedBy { get; set; }
+        public string StudentEmail { get; set; }
+        public string SupervisorEmail { get; set; }
+        public string? MeetingLink { get; set; } // Azure Communication Services link or physical location
+        public string MeetingType { get; set; } // "virtual", "in-person", "hybrid"
+        public bool IsRecurring { get; set; } = false;
+        public string? RecurrencePattern { get; set; } // "weekly", "biweekly", "monthly"
+        public DateTime? RecurrenceEndDate { get; set; }
         public DateTime? CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
     }

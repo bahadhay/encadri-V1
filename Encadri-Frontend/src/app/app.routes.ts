@@ -67,7 +67,7 @@ export const routes: Routes = [
       },
       {
         path: 'meetings',
-        loadComponent: () => import('./features/meetings/meeting-list/meeting-list.component').then(m => m.MeetingListComponent)
+        loadComponent: () => import('./features/meetings/meetings-dashboard/meetings-dashboard.component').then(m => m.MeetingsDashboardComponent)
       },
       {
         path: 'video-call/:meetingId',

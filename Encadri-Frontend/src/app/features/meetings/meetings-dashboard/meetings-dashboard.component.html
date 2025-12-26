@@ -1,0 +1,320 @@
+<div class="meetings-dashboard">
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1>
+        <app-icon name="calendar" [size]="32"></app-icon>
+        Meetings
+      </h1>
+      <p class="subtitle">Manage your meetings and availability</p>
+    </div>
+
+    <div class="header-actions">
+      @if (isStudent()) {
+        <button class="btn btn-primary" (click)="createMeetingRequest()">
+          <app-icon name="add" [size]="20"></app-icon>
+          Request Meeting
+        </button>
+      }
+
+      @if (isSupervisor()) {
+        <button class="btn btn-secondary" (click)="setAvailability()">
+          <app-icon name="schedule" [size]="20"></app-icon>
+          Set Availability
+        </button>
+        <button class="btn btn-primary" (click)="bulkInviteStudents()">
+          <app-icon name="group" [size]="20"></app-icon>
+          Bulk Invite Students
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button
+      class="tab"
+      [class.active]="activeTab() === 'upcoming'"
+      (click)="switchTab('upcoming')">
+      <app-icon name="event" [size]="20"></app-icon>
+      Upcoming
+      @if (upcomingMeetings().length > 0) {
+        <span class="badge">{{ upcomingMeetings().length }}</span>
+      }
+    </button>
+
+    <button
+      class="tab"
+      [class.active]="activeTab() === 'requests'"
+      (click)="switchTab('requests')">
+      <app-icon name="notifications" [size]="20"></app-icon>
+      Requests
+      @if (pendingRequests().length > 0) {
+        <span class="badge badge-warning">{{ pendingRequests().length }}</span>
+      }
+    </button>
+
+    @if (isSupervisor()) {
+      <button
+        class="tab"
+        [class.active]="activeTab() === 'availability'"
+        (click)="switchTab('availability')">
+        <app-icon name="schedule" [size]="20"></app-icon>
+        My Availability
+      </button>
+    }
+
+    <button
+      class="tab"
+      [class.active]="activeTab() === 'history'"
+      (click)="switchTab('history')">
+      <app-icon name="history" [size]="20"></app-icon>
+      History
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading meetings...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (error()) {
+    <div class="error-state">
+      <app-icon name="error" [size]="48"></app-icon>
+      <p>{{ error() }}</p>
+      <button class="btn btn-primary" (click)="loadData()">Retry</button>
+    </div>
+  }
+
+  <!-- Upcoming Meetings Tab -->
+  @if (activeTab() === 'upcoming' && !loading()) {
+    <div class="tab-content">
+      @if (upcomingMeetings().length === 0) {
+        <div class="empty-state">
+          <app-icon name="event" [size]="64"></app-icon>
+          <h3>No upcoming meetings</h3>
+          <p>{{ isStudent() ? 'Request a meeting with your supervisor' : 'Schedule meetings with your students' }}</p>
+          @if (isStudent()) {
+            <button class="btn btn-primary" (click)="createMeetingRequest()">
+              Request Meeting
+            </button>
+          }
+        </div>
+      } @else {
+        <div class="meetings-grid">
+          @for (meeting of upcomingMeetings(); track meeting.id) {
+            <div class="meeting-card" [class.urgent]="getTimeUntilMeeting(meeting.scheduledAt).includes('hour')">
+              <div class="meeting-header">
+                <div class="meeting-info">
+                  <h3>{{ meeting.title }}</h3>
+                  <span class="meeting-type" [class.virtual]="meeting.meetingType === 'virtual'">
+                    <app-icon [name]="meeting.meetingType === 'virtual' ? 'videocam' : 'location'" [size]="16"></app-icon>
+                    {{ meeting.meetingType }}
+                  </span>
+                </div>
+                <span class="status-badge" [style.background-color]="getStatusColor(meeting.status)">
+                  {{ meeting.status }}
+                </span>
+              </div>
+
+              <div class="meeting-details">
+                <div class="detail-row">
+                  <app-icon name="schedule" [size]="18"></app-icon>
+                  <span>{{ formatDate(meeting.scheduledAt) }}</span>
+                </div>
+
+                <div class="detail-row">
+                  <app-icon name="timer" [size]="18"></app-icon>
+                  <span>{{ meeting.durationMinutes }} minutes</span>
+                </div>
+
+                @if (meeting.location) {
+                  <div class="detail-row">
+                    <app-icon name="location" [size]="18"></app-icon>
+                    <span>{{ meeting.location }}</span>
+                  </div>
+                }
+
+                <div class="detail-row">
+                  <app-icon name="person" [size]="18"></app-icon>
+                  <span>{{ isStudent() ? 'With ' + meeting.supervisorEmail : 'With ' + meeting.studentEmail }}</span>
+                </div>
+
+                @if (meeting.agenda) {
+                  <div class="detail-row">
+                    <app-icon name="description" [size]="18"></app-icon>
+                    <span>{{ meeting.agenda }}</span>
+                  </div>
+                }
+              </div>
+
+              <div class="meeting-footer">
+                <span class="time-until">{{ getTimeUntilMeeting(meeting.scheduledAt) }}</span>
+                <div class="meeting-actions">
+                  <button class="btn btn-sm btn-secondary" (click)="viewMeetingDetails(meeting.id)">
+                    Details
+                  </button>
+                  @if (meeting.meetingType === 'virtual') {
+                    <button class="btn btn-sm btn-primary" (click)="joinVideoCall(meeting.id)">
+                      <app-icon name="videocam" [size]="16"></app-icon>
+                      Join
+                    </button>
+                  }
+                  <button class="btn btn-sm btn-danger" (click)="cancelMeeting(meeting)">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Meeting Requests Tab -->
+  @if (activeTab() === 'requests' && !loading()) {
+    <div class="tab-content">
+      @if (pendingRequests().length === 0) {
+        <div class="empty-state">
+          <app-icon name="inbox" [size]="64"></app-icon>
+          <h3>No pending requests</h3>
+          <p>{{ isStudent() ? 'All your meeting requests have been processed' : 'No students have requested meetings' }}</p>
+        </div>
+      } @else {
+        <div class="requests-list">
+          @for (request of pendingRequests(); track request.id) {
+            <div class="request-card">
+              <div class="request-header">
+                <div class="request-info">
+                  <h3>{{ request.title || 'Meeting Request' }}</h3>
+                  @if (isStudent()) {
+                    <span class="request-meta">Sent to {{ request.supervisorEmail }}</span>
+                  } @else {
+                    <span class="request-meta">From {{ request.studentEmail }}</span>
+                  }
+                </div>
+                <span class="status-badge" [style.background-color]="getStatusColor(request.status || 'pending')">
+                  {{ request.status }}
+                </span>
+              </div>
+
+              <div class="request-details">
+                <div class="detail-row">
+                  <app-icon name="schedule" [size]="18"></app-icon>
+                  <span>Preferred: {{ formatDate(request.preferredDate) }}</span>
+                </div>
+
+                @if (request.agenda) {
+                  <div class="detail-row">
+                    <app-icon name="description" [size]="18"></app-icon>
+                    <span>{{ request.agenda }}</span>
+                  </div>
+                }
+
+                @if (request.durationMinutes) {
+                  <div class="detail-row">
+                    <app-icon name="timer" [size]="18"></app-icon>
+                    <span>{{ request.durationMinutes }} minutes</span>
+                  </div>
+                }
+              </div>
+
+              @if (isSupervisor() && request.status === 'pending') {
+                <div class="request-actions">
+                  <button class="btn btn-success" (click)="approveMeetingRequest(request)">
+                    <app-icon name="check" [size]="16"></app-icon>
+                    Approve
+                  </button>
+                  <button class="btn btn-danger" (click)="rejectMeetingRequest(request)">
+                    <app-icon name="close" [size]="16"></app-icon>
+                    Reject
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Supervisor Availability Tab -->
+  @if (activeTab() === 'availability' && isSupervisor() && !loading()) {
+    <div class="tab-content">
+      @if (supervisorAvailability().length === 0) {
+        <div class="empty-state">
+          <app-icon name="schedule" [size]="64"></app-icon>
+          <h3>No availability set</h3>
+          <p>Set your office hours so students can see when you're available</p>
+          <button class="btn btn-primary" (click)="setAvailability()">
+            Set Office Hours
+          </button>
+        </div>
+      } @else {
+        <div class="availability-grid">
+          @for (daySlot of supervisorAvailability(); track daySlot.day) {
+            <div class="availability-card">
+              <h3>{{ daySlot.day }}</h3>
+              <div class="time-slots">
+                @for (slot of daySlot.slots; track slot.id) {
+                  <div class="time-slot">
+                    <app-icon name="schedule" [size]="16"></app-icon>
+                    <span>{{ slot.startTime }} - {{ slot.endTime }}</span>
+                    @if (slot.location) {
+                      <span class="location">{{ slot.location }}</span>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+        <div class="availability-actions">
+          <button class="btn btn-primary" (click)="setAvailability()">
+            Update Availability
+          </button>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Meeting History Tab -->
+  @if (activeTab() === 'history' && !loading()) {
+    <div class="tab-content">
+      @if (pastMeetings().length === 0) {
+        <div class="empty-state">
+          <app-icon name="history" [size]="64"></app-icon>
+          <h3>No meeting history</h3>
+          <p>Past meetings will appear here</p>
+        </div>
+      } @else {
+        <div class="history-list">
+          @for (meeting of pastMeetings(); track meeting.id) {
+            <div class="history-card">
+              <div class="history-header">
+                <h3>{{ meeting.title }}</h3>
+                <span class="history-date">{{ formatDate(meeting.scheduledAt) }}</span>
+              </div>
+              <div class="history-details">
+                <span class="status-badge" [style.background-color]="getStatusColor(meeting.status)">
+                  {{ meeting.status }}
+                </span>
+                <span>{{ isStudent() ? meeting.supervisorEmail : meeting.studentEmail }}</span>
+                <span>{{ meeting.durationMinutes }} min</span>
+              </div>
+              @if (meeting.meetingNotes) {
+                <div class="meeting-notes">
+                  <p>{{ meeting.meetingNotes }}</p>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

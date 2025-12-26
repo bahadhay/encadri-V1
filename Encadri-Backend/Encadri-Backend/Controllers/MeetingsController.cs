@@ -21,19 +21,30 @@ namespace Encadri_Backend.Controllers
         }
 
         /// <summary>
-        /// Get all meetings
+        /// Get all meetings (with optional filtering)
         /// </summary>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Meeting>>> GetAll([FromQuery] string? projectId = null)
+        public async Task<ActionResult<IEnumerable<Meeting>>> GetAll(
+            [FromQuery] string? projectId = null,
+            [FromQuery] string? userEmail = null,
+            [FromQuery] string? status = null,
+            [FromQuery] bool upcomingOnly = false)
         {
             var meetings = _context.Meetings.AsQueryable();
 
             if (!string.IsNullOrEmpty(projectId))
-            {
                 meetings = meetings.Where(m => m.ProjectId == projectId);
-            }
 
-            return Ok(await meetings.ToListAsync());
+            if (!string.IsNullOrEmpty(userEmail))
+                meetings = meetings.Where(m => m.StudentEmail == userEmail || m.SupervisorEmail == userEmail);
+
+            if (!string.IsNullOrEmpty(status))
+                meetings = meetings.Where(m => m.Status == status);
+
+            if (upcomingOnly)
+                meetings = meetings.Where(m => m.ScheduledAt > DateTime.UtcNow && m.Status != "cancelled");
+
+            return Ok(await meetings.OrderByDescending(m => m.ScheduledAt).ToListAsync());
         }
 
         /// <summary>
@@ -150,5 +161,97 @@ namespace Encadri_Backend.Controllers
 
             return NoContent();
         }
+
+        /// <summary>
+        /// Bulk create meeting invitations for all students (Supervisor)
+        /// </summary>
+        [HttpPost("bulk-invite")]
+        public async Task<ActionResult<List<Meeting>>> BulkInvite([FromBody] BulkMeetingInviteRequest request)
+        {
+            var supervisor = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.SupervisorEmail);
+            if (supervisor == null || supervisor.UserRole != "supervisor")
+                return BadRequest("Invalid supervisor");
+
+            // Get all students assigned to this supervisor's projects
+            var projects = await _context.Projects
+                .Where(p => p.SupervisorEmail == request.SupervisorEmail && !string.IsNullOrEmpty(p.StudentEmail))
+                .ToListAsync();
+
+            var studentEmails = projects.Select(p => p.StudentEmail).Distinct().ToList();
+            var createdMeetings = new List<Meeting>();
+
+            foreach (var studentEmail in studentEmails)
+            {
+                var studentProject = projects.FirstOrDefault(p => p.StudentEmail == studentEmail);
+                if (studentProject == null) continue;
+
+                var meeting = new Meeting
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    ProjectId = studentProject.Id,
+                    Title = request.Title,
+                    ScheduledAt = DateTimeHelper.EnsureUtc(request.ScheduledAt),
+                    DurationMinutes = request.DurationMinutes ?? 60,
+                    Location = request.Location,
+                    Agenda = request.Agenda,
+                    Status = "pending",
+                    StudentEmail = studentEmail,
+                    SupervisorEmail = request.SupervisorEmail,
+                    MeetingType = request.MeetingType ?? "virtual",
+                    RequestedBy = request.SupervisorEmail,
+                    CreatedDate = DateTime.UtcNow,
+                    UpdatedDate = DateTime.UtcNow
+                };
+
+                _context.Meetings.Add(meeting);
+                createdMeetings.Add(meeting);
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Send bulk notifications
+            await _notificationService.NotifyBulkMeetingInvitation(
+                studentEmails,
+                request.Title,
+                request.ScheduledAt,
+                createdMeetings.FirstOrDefault()?.Id ?? ""
+            );
+
+            return Ok(createdMeetings);
+        }
+
+        /// <summary>
+        /// Get upcoming meetings for a user
+        /// </summary>
+        [HttpGet("upcoming/{userEmail}")]
+        public async Task<ActionResult<IEnumerable<Meeting>>> GetUpcoming(string userEmail, [FromQuery] int hours = 24)
+        {
+            var now = DateTime.UtcNow;
+            var futureTime = now.AddHours(hours);
+
+            var meetings = await _context.Meetings
+                .Where(m => (m.StudentEmail == userEmail || m.SupervisorEmail == userEmail)
+                    && m.ScheduledAt >= now
+                    && m.ScheduledAt <= futureTime
+                    && m.Status != "cancelled")
+                .OrderBy(m => m.ScheduledAt)
+                .ToListAsync();
+
+            return Ok(meetings);
+        }
+    }
+
+    /// <summary>
+    /// Bulk Meeting Invite Request DTO
+    /// </summary>
+    public class BulkMeetingInviteRequest
+    {
+        public string SupervisorEmail { get; set; }
+        public string Title { get; set; }
+        public DateTime ScheduledAt { get; set; }
+        public int? DurationMinutes { get; set; }
+        public string? Location { get; set; }
+        public string? Agenda { get; set; }
+        public string? MeetingType { get; set; }
     }
 }

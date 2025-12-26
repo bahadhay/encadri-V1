@@ -36,6 +36,10 @@
         <app-icon name="submissions" [size]="20"></app-icon>
         <span>Submissions</span>
       </a>
+      <a routerLink="/meetings" routerLinkActive="active" class="nav-item" (click)="closeSidebarOnMobile()">
+        <app-icon name="event" [size]="20"></app-icon>
+        <span>Meetings</span>
+      </a>
       <a routerLink="/chat" routerLinkActive="active" class="nav-item" (click)="closeSidebarOnMobile()">
         <app-icon name="chat" [size]="20"></app-icon>
         <span>Chat</span>

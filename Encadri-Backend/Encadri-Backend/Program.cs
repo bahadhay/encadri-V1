@@ -122,6 +122,9 @@ builder.Services.AddSingleton<Encadri_Backend.Services.IAzureBlobStorageService,
 builder.Services.AddSingleton<Encadri_Backend.Services.IAzureCommunicationService, Encadri_Backend.Services.AzureCommunicationService>();
 builder.Services.AddScoped<Encadri_Backend.Services.IDocumentService, Encadri_Backend.Services.DocumentService>();
 
+// Add Meeting Reminder Background Service
+builder.Services.AddHostedService<Encadri_Backend.Services.MeetingReminderService>();
+
 // Configure CORS for Angular frontend and Swagger (with SignalR support)
 builder.Services.AddCors(options =>
 {

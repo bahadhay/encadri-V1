@@ -15,6 +15,10 @@ namespace Encadri_Backend.Data
         public DbSet<Project> Projects { get; set; }
         public DbSet<Submission> Submissions { get; set; }
         public DbSet<Meeting> Meetings { get; set; }
+        public DbSet<MeetingRequest> MeetingRequests { get; set; }
+        public DbSet<SupervisorAvailability> SupervisorAvailabilities { get; set; }
+        public DbSet<MeetingDocument> MeetingDocuments { get; set; }
+        public DbSet<MeetingReminder> MeetingReminders { get; set; }
         public DbSet<Evaluation> Evaluations { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<Notification> Notifications { get; set; }
@@ -66,6 +70,38 @@ namespace Encadri_Backend.Data
 
             // Configure Meeting entity
             modelBuilder.Entity<Meeting>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+            });
+
+            // Configure MeetingRequest entity
+            modelBuilder.Entity<MeetingRequest>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                // Store DocumentUrls as JSON
+                entity.Property(e => e.DocumentUrls)
+                    .HasConversion(
+                        v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                        v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<string>()
+                    )
+                    .HasColumnType("json");
+            });
+
+            // Configure SupervisorAvailability entity
+            modelBuilder.Entity<SupervisorAvailability>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+            });
+
+            // Configure MeetingDocument entity
+            modelBuilder.Entity<MeetingDocument>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+            });
+
+            // Configure MeetingReminder entity
+            modelBuilder.Entity<MeetingReminder>(entity =>
             {
                 entity.HasKey(e => e.Id);
             });
