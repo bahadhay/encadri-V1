@@ -48,6 +48,7 @@ export interface SupervisorAvailability {
   endTime: string;
   isRecurring: boolean;
   specificDate?: string;
+  meetingType?: 'virtual' | 'in-person' | 'both';
   location?: string;
   isActive?: boolean;
   createdDate?: string;

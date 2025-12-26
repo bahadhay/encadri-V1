@@ -80,10 +80,23 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
                       type="button"
                       class="time-badge"
                       [class.selected]="isSlotSelected(daySlot.day, slot.id)"
+                      [class.virtual]="slot.meetingType === 'virtual'"
+                      [class.in-person]="slot.meetingType === 'in-person'"
+                      [class.both]="slot.meetingType === 'both' || !slot.meetingType"
                       (click)="selectTimeSlot(daySlot.day, slot)">
                       {{ slot.startTime }} - {{ slot.endTime }}
-                      @if (slot.location) {
-                        <span class="location-hint">📍 {{ slot.location }}</span>
+                      @if (slot.meetingType === 'virtual') {
+                        <span class="type-badge">💻 Virtual</span>
+                      } @else if (slot.meetingType === 'in-person') {
+                        <span class="type-badge">🏢 In-Person</span>
+                        @if (slot.location) {
+                          <span class="location-hint">📍 {{ slot.location }}</span>
+                        }
+                      } @else {
+                        <span class="type-badge">💻🏢 Both</span>
+                        @if (slot.location) {
+                          <span class="location-hint">📍 {{ slot.location }}</span>
+                        }
                       }
                     </button>
                   }
@@ -360,6 +373,27 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
       opacity: 0.9;
     }
 
+    .type-badge {
+      font-size: 0.7rem;
+      margin-left: 0.25rem;
+      padding: 0.125rem 0.25rem;
+      border-radius: 0.25rem;
+      background-color: rgba(255, 255, 255, 0.3);
+      display: inline-block;
+    }
+
+    .time-badge.virtual {
+      border-left: 3px solid #3b82f6;
+    }
+
+    .time-badge.in-person {
+      border-left: 3px solid #f59e0b;
+    }
+
+    .time-badge.both {
+      border-left: 3px solid #8b5cf6;
+    }
+
     .hint-text {
       color: #15803d;
       font-size: 0.875rem;
@@ -507,6 +541,21 @@ export class RequestMeetingComponent implements OnInit {
 
     // Set the start time
     this.preferredTime = slot.startTime;
+
+    // Auto-set meeting type based on supervisor's availability
+    if (slot.meetingType === 'virtual') {
+      this.request.meetingType = 'virtual';
+      this.request.location = ''; // Clear location for virtual meetings
+    } else if (slot.meetingType === 'in-person') {
+      this.request.meetingType = 'in-person';
+      this.request.location = slot.location || '';
+    } else {
+      // If supervisor accepts both, default to virtual but allow student to choose
+      this.request.meetingType = this.request.meetingType || 'virtual';
+      if (slot.location) {
+        this.request.location = slot.location;
+      }
+    }
   }
 
   getNextDayOfWeek(dayName: string): Date {

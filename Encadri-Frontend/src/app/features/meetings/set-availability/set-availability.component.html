@@ -77,13 +77,26 @@
               </div>
 
               <div class="form-group">
-                <label>Location</label>
-                <input
-                  type="text"
-                  placeholder="e.g., Office 301, Online"
-                  [value]="slot.location || ''"
-                  (input)="updateSlot($index, 'location', $any($event.target).value)">
+                <label>Meeting Type</label>
+                <select
+                  [value]="slot.meetingType || 'both'"
+                  (change)="updateSlot($index, 'meetingType', $any($event.target).value)">
+                  <option value="both">Both (Virtual & In-Person)</option>
+                  <option value="virtual">Virtual Only</option>
+                  <option value="in-person">In-Person Only</option>
+                </select>
               </div>
+
+              @if (slot.meetingType === 'in-person' || slot.meetingType === 'both' || !slot.meetingType) {
+                <div class="form-group">
+                  <label>Location {{ slot.meetingType === 'in-person' ? '*' : '(for in-person)' }}</label>
+                  <input
+                    type="text"
+                    placeholder="e.g., Office 301, Building A"
+                    [value]="slot.location || ''"
+                    (input)="updateSlot($index, 'location', $any($event.target).value)">
+                </div>
+              }
 
               <div class="form-group checkbox-group">
                 <label>

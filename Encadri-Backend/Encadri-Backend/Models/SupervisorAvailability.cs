@@ -13,7 +13,8 @@ namespace Encadri_Backend.Models
         public TimeSpan EndTime { get; set; }
         public bool IsRecurring { get; set; } // If true, repeats weekly
         public DateTime? SpecificDate { get; set; } // For one-time availability
-        public string? Location { get; set; }
+        public string? MeetingType { get; set; } // "virtual", "in-person", or "both"
+        public string? Location { get; set; } // Physical location for in-person meetings
         public bool IsActive { get; set; } = true;
         public DateTime? CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }

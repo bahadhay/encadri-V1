@@ -62,6 +62,7 @@ export class SetAvailabilityComponent implements OnInit {
       startTime: '09:00',
       endTime: '10:00',
       isRecurring: true,
+      meetingType: 'both',
       location: 'Office',
       isActive: true
     };
@@ -123,6 +124,7 @@ export class SetAvailabilityComponent implements OnInit {
         startTime: this.formatTimeForBackend(slot.startTime!),
         endTime: this.formatTimeForBackend(slot.endTime!),
         isRecurring: slot.isRecurring !== undefined ? slot.isRecurring : true,
+        meetingType: slot.meetingType || 'both',
         location: slot.location || null,
         isActive: true
       };
