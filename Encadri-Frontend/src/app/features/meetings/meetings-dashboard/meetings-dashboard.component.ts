@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MeetingService } from '../../../core/services/meeting.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -18,6 +18,7 @@ export class MeetingsDashboardComponent implements OnInit {
   private meetingService = inject(MeetingService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   // Signals
   currentUser = this.authService.currentUser;
@@ -35,6 +36,13 @@ export class MeetingsDashboardComponent implements OnInit {
   pastMeetings = signal<Meeting[]>([]);
 
   ngOnInit() {
+    // Check for tab query parameter
+    this.route.queryParams.subscribe(params => {
+      if (params['tab']) {
+        this.switchTab(params['tab']);
+      }
+    });
+
     this.loadData();
   }
 

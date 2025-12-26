@@ -141,7 +141,11 @@ export class SetAvailabilityComponent implements OnInit {
       next: () => {
         this.success.set('Availability saved successfully');
         this.loading.set(false);
-        setTimeout(() => this.router.navigate(['/meetings']), 1500);
+        // Redirect to meetings page with availability tab active
+        setTimeout(() => this.router.navigate(['/meetings'], {
+          queryParams: { tab: 'availability' },
+          fragment: 'availability'
+        }), 1500);
       },
       error: (err) => {
         console.error('Failed to save availability:', err);
