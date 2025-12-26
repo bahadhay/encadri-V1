@@ -99,17 +99,45 @@ export class SetAvailabilityComponent implements OnInit {
       return;
     }
 
-    this.meetingService.bulkCreateAvailability(newSlots).subscribe({
+    // Validate that all required fields are filled
+    for (const slot of newSlots) {
+      if (!slot.dayOfWeek || !slot.startTime || !slot.endTime || !slot.supervisorEmail) {
+        this.error.set('Please fill in all time slot fields');
+        this.loading.set(false);
+        return;
+      }
+    }
+
+    // Format the slots to ensure proper TimeSpan format for .NET backend
+    const formattedSlots = newSlots.map(slot => ({
+      ...slot,
+      startTime: this.formatTimeForBackend(slot.startTime!),
+      endTime: this.formatTimeForBackend(slot.endTime!)
+    }));
+
+    console.log('Sending availability data:', formattedSlots);
+
+    this.meetingService.bulkCreateAvailability(formattedSlots).subscribe({
       next: () => {
         this.success.set('Availability saved successfully');
         this.loading.set(false);
         setTimeout(() => this.router.navigate(['/meetings']), 1500);
       },
       error: (err) => {
-        this.error.set('Failed to save availability');
+        console.error('Failed to save availability:', err);
+        const errorMsg = err.error?.message || err.message || 'Failed to save availability';
+        this.error.set(errorMsg);
         this.loading.set(false);
       }
     });
+  }
+
+  // Convert HH:mm to TimeSpan format that .NET expects (HH:mm:ss)
+  formatTimeForBackend(time: string): string {
+    if (time.split(':').length === 2) {
+      return `${time}:00`; // Add seconds
+    }
+    return time;
   }
 
   clearAllAvailability() {
