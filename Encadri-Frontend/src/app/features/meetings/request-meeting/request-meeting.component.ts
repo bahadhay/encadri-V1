@@ -1,10 +1,12 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MeetingService } from '../../../core/services/meeting.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ProjectService } from '../../../core/services/project.service';
 import { MeetingRequest } from '../../../core/models/meeting.model';
+import { Project } from '../../../core/models/project.model';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 @Component({
@@ -39,14 +41,27 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
         <h2>Meeting Request Details</h2>
 
         <div class="form-group">
-          <label>Supervisor Email *</label>
-          <input type="email" [(ngModel)]="request.supervisorEmail" placeholder="supervisor@university.edu">
+          <label>Select Project *</label>
+          @if (loadingProjects()) {
+            <p class="loading-text">Loading your projects...</p>
+          } @else if (projects().length === 0) {
+            <p class="info-text">No projects found. Please create a project first.</p>
+          } @else {
+            <select [(ngModel)]="selectedProjectId" (change)="onProjectChange()">
+              <option value="">-- Select a project --</option>
+              @for (project of projects(); track project.id) {
+                <option [value]="project.id">{{ project.title }}</option>
+              }
+            </select>
+          }
         </div>
 
-        <div class="form-group">
-          <label>Project ID *</label>
-          <input type="text" [(ngModel)]="request.projectId" placeholder="Enter your project ID">
-        </div>
+        @if (selectedProject()) {
+          <div class="project-info">
+            <app-icon name="info" [size]="16"></app-icon>
+            <span>Supervisor: {{ selectedProject()?.supervisorEmail }}</span>
+          </div>
+        }
 
         <div class="form-group">
           <label>Meeting Title</label>
@@ -200,6 +215,32 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
       margin-top: 0.125rem;
     }
 
+    .loading-text {
+      color: #6b7280;
+      font-style: italic;
+      margin: 0;
+      padding: 0.625rem;
+    }
+
+    .info-text {
+      color: #6b7280;
+      margin: 0;
+      padding: 0.625rem;
+    }
+
+    .project-info {
+      background-color: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 0.375rem;
+      padding: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      color: #0369a1;
+      font-size: 0.875rem;
+    }
+
     .actions {
       display: flex;
       justify-content: flex-end;
@@ -240,15 +281,21 @@ import { IconComponent } from '../../../shared/components/icon/icon.component';
     }
   `]
 })
-export class RequestMeetingComponent {
+export class RequestMeetingComponent implements OnInit {
   private meetingService = inject(MeetingService);
   private authService = inject(AuthService);
+  private projectService = inject(ProjectService);
   private router = inject(Router);
 
   currentUser = this.authService.currentUser;
   loading = signal(false);
+  loadingProjects = signal(false);
   error = signal<string | null>(null);
   success = signal<string | null>(null);
+
+  projects = signal<Project[]>([]);
+  selectedProjectId = '';
+  selectedProject = signal<Project | null>(null);
 
   preferredDate = '';
   preferredTime = '';
@@ -262,6 +309,40 @@ export class RequestMeetingComponent {
     durationMinutes: 30,
     status: 'pending'
   };
+
+  ngOnInit() {
+    this.loadProjects();
+  }
+
+  loadProjects() {
+    this.loadingProjects.set(true);
+    this.projectService.getProjects().subscribe({
+      next: (projects) => {
+        // Filter to show only projects where user is a student
+        const userEmail = this.currentUser()?.email;
+        const userProjects = projects.filter(p => p.studentEmail === userEmail);
+        this.projects.set(userProjects);
+        this.loadingProjects.set(false);
+      },
+      error: (err) => {
+        this.error.set('Failed to load projects');
+        this.loadingProjects.set(false);
+      }
+    });
+  }
+
+  onProjectChange() {
+    const project = this.projects().find(p => p.id === this.selectedProjectId);
+    if (project) {
+      this.selectedProject.set(project);
+      this.request.projectId = project.id;
+      this.request.supervisorEmail = project.supervisorEmail;
+    } else {
+      this.selectedProject.set(null);
+      this.request.projectId = '';
+      this.request.supervisorEmail = '';
+    }
+  }
 
   isValid(): boolean {
     return !!(
