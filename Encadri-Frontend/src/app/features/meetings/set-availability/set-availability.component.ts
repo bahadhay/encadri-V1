@@ -56,13 +56,13 @@ export class SetAvailabilityComponent implements OnInit {
       return;
     }
 
-    const newSlot = {
+    const newSlot: Partial<SupervisorAvailability> = {
       supervisorEmail: userEmail,
       dayOfWeek: 'Monday',
       startTime: '09:00',
       endTime: '10:00',
       isRecurring: true,
-      meetingType: 'both',
+      meetingType: 'both' as const,
       location: 'Office',
       isActive: true
     };
@@ -118,14 +118,15 @@ export class SetAvailabilityComponent implements OnInit {
     // Format the slots to ensure proper TimeSpan format for .NET backend
     // System.Text.Json expects TimeSpan as "HH:mm:ss" or "d.HH:mm:ss" format
     const formattedSlots = newSlots.map(slot => {
-      const formatted: any = {
+      const meetingType = slot.meetingType || 'both';
+      const formatted: Partial<SupervisorAvailability> & { startTime: string; endTime: string } = {
         supervisorEmail: slot.supervisorEmail,
         dayOfWeek: slot.dayOfWeek,
         startTime: this.formatTimeForBackend(slot.startTime!),
         endTime: this.formatTimeForBackend(slot.endTime!),
         isRecurring: slot.isRecurring !== undefined ? slot.isRecurring : true,
-        meetingType: slot.meetingType || 'both',
-        location: slot.location || null,
+        meetingType: meetingType as 'virtual' | 'in-person' | 'both',
+        location: slot.location || undefined,
         isActive: true
       };
 
