@@ -177,7 +177,7 @@ export class MeetingsDashboardComponent implements OnInit {
 
   formatDate(dateString: string): string {
     const date = new Date(dateString);
-    const options: Intl.DateTimeFormat​Options = {
+    const options: Intl.DateTimeFormatOptions = {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
